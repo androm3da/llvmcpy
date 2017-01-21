@@ -22,6 +22,8 @@ define i32 @foo(i32 %x) {
         self._delete_temps()
 
     def test_example(self):
+        '''Test example case from README
+        '''
         import sys
         from llvmcpy.llvm import create_memory_buffer_with_contents_of_file, get_global_context
 
@@ -32,6 +34,9 @@ define i32 @foo(i32 %x) {
 
         funcs = list(module.iter_functions())
         assert len(funcs) == 1
+
+        blocks = list(funcs[0].iter_basic_blocks())
+        assert len(blocks) == 1
 
         for function in module.iter_functions():
             for bb in function.iter_basic_blocks():
