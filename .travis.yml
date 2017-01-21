@@ -11,6 +11,7 @@ python:
   - "3.6-dev"
   - "3.7-dev"
   - "nightly"
+  - "pypy"
 
 addons:
   apt:
@@ -31,4 +32,4 @@ before_install:
 install: "pip install -e ."
 # command to run tests
 script:
-    - python -m unittest discover
+    - python -m unittest discover tests/

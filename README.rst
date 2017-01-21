@@ -26,8 +26,11 @@ versions of the `LLVM-C API`_ should be basically effortless.
 
 To try it out install LLVM and get `llvmcpy` using `pip`::
 
-    sudo apt-get install llvm
+    sudo apt-get install llvm libllvm3.8
     pip install llvmcpy
+
+See [apt.llvm.org](http://apt.llvm.org/) for more package sources
+if yours don't include the version you're looking for.
 
 *****************************************
 Naming of the generated classes/functions
