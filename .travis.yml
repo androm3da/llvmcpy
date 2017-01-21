@@ -18,6 +18,10 @@ addons:
     - libllvm3.5
     - llvm3.5
 before_install:
+    - dpkg -L llvm3.5
+    - dpkg -L libllvm3.5
+    - which llvm-config
+    - llvm-config --libdir
     - rm -rf ~/.cache/
 install: "pip install -e ."
 # command to run tests
