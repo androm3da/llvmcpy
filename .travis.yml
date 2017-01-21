@@ -16,6 +16,7 @@ addons:
   apt:
     packages:
     - libllvm3.5
+    - llvm3.5
 install: "pip install -e ."
 # command to run tests
 script:
