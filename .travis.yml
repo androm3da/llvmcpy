@@ -17,6 +17,8 @@ addons:
     packages:
     - libllvm3.5
     - llvm3.5
+before_install:
+    - rm -rf ~/.cache/
 install: "pip install -e ."
 # command to run tests
 script:
