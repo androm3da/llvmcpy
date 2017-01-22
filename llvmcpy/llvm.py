@@ -13,8 +13,10 @@ from cffi import FFI
 from glob import glob
 from collections import defaultdict
 
+
 def is_llvm_type(name):
     return name.startswith("struct LLVM")
+
 
 def remove_llvm_prefix(name):
     assert is_llvm_type(name)
@@ -23,8 +25,11 @@ def remove_llvm_prefix(name):
         name = name[len("Opaque"):]
     return name
 
+
 def to_python_case(name):
-    """Convert "GetLLVMFunctionID" to a more pythonic "get_llvm_function_id" """
+    """Convert "GetLLVMFunctionID" to a more pythonic
+       "get_llvm_function_id"
+    """
 
     # If it's all upper cases, simply return the lower case version
     if name.isupper():
@@ -33,8 +38,8 @@ def to_python_case(name):
     result = ""
     # When the case in the input changes, emit a _
     for prev, cur, next in zip("a" + name[:-1], name, name[1:] + "a"):
-        if ((prev.islower() and cur.isupper())
-            or (next.islower() and cur.isupper())):
+        if ((prev.islower() and cur.isupper()) or
+                (next.islower() and cur.isupper())):
             result += "_"
         result += cur.lower()
 
@@ -44,6 +49,7 @@ def to_python_case(name):
 
     # Discard the initial _
     return result[1:]
+
 
 def normalize_name(original_class_name, original_name):
     """Normalizes the case and remove the name of the class from the method name
@@ -73,6 +79,7 @@ def normalize_name(original_class_name, original_name):
 
     return name
 
+
 def create_function(library, name, prototype,
                     class_name=None, properties=None, classes=None):
     """Return a string containing one or more Python functions wrapping in a
@@ -99,7 +106,7 @@ def create_function(library, name, prototype,
         if arg_type.kind == "pointer":
             pointee = arg_type.item
             if (pointee.kind == "pointer" and pointee.item.kind == "struct"
-                and is_llvm_type(pointee.item.cname)):
+                    and is_llvm_type(pointee.item.cname)):
                 # LLVM object **: the function is returning a reference to an
                 # object or it's an array
                 arguments.append(("([x.in_ptr() for x in arg{}] "
@@ -108,7 +115,8 @@ def create_function(library, name, prototype,
                                                                     index,
                                                                     index))
                 out_args.append(index)
-            elif (pointee.kind == "pointer" and pointee.item.kind == "primitive"
+            elif (pointee.kind == "pointer"
+                  and pointee.item.kind == "primitive"
                   and pointee.item.cname == "char"):
                 # char **: the function is returning a string
                 arguments.append("arg{}".format(index))
@@ -182,9 +190,10 @@ def create_function(library, name, prototype,
     # array of LLVM objects.
     for out_arg in out_args:
         # If it's not the last argument and the next is an integer
+        eff_args_out = effective_arguments[out_arg + 1]
         if ((len(effective_arguments) > out_arg + 1)
-            and (effective_arguments[out_arg + 1].kind == "primitive")
-            and (effective_arguments[out_arg + 1].cname == "unsigned int")):
+            and (eff_args_out.kind == "primitive")
+                and (eff_args_out.cname == "unsigned int")):
 
             # Replace the argument with the lenght of the previous argument
             arguments[out_arg + 1] = "len(arg{})".format(out_arg)
@@ -192,19 +201,18 @@ def create_function(library, name, prototype,
             # Remove the function argument, we know how to compute it
             function_arguments[out_arg + 1] = None
 
-
     # Special case: the function returns a boolean and has either a single LLVM
-    # object out argument or an out string argument. In this case we will remove
-    # the out argument (if present), create a temporary object and return in
-    # it. More over in case of error we'll throw an exception, possibly with an
-    # appropriate error message.
+    # object out argument or an out string argument. In this case we will
+    # remove the out argument (if present), create a temporary object and
+    # return in it. More over in case of error we'll throw an exception,
+    # possibly with an appropriate error message.
     has_out_arg = len(out_args) == 1
     has_error_message = ((len(out_strings) == 1)
                          and (out_strings[0] == len(arguments) - 1))
 
     if (return_type.kind == "primitive"
         and return_type.cname == "int"
-        and (has_out_arg or has_error_message)):
+            and (has_out_arg or has_error_message)):
 
         # Has an out LLVM object, we will create a temporary object, pass it to
         # the function and then return it
@@ -244,8 +252,8 @@ def create_function(library, name, prototype,
         if has_out_arg:
             # Print the function body: first create a temporary object we will
             # return, then call the function replacing the out argument with
-            # that object, take the boolean result and if there's an error throw
-            # an exception
+            # that object, take the boolean result and if there's an error
+            # throw an exception
             result_type = prototype.args[out_arg + skip_args].item.item.cname
             result_type = remove_llvm_prefix(result_type)
             result_type += "()"
@@ -267,7 +275,7 @@ def create_function(library, name, prototype,
 
             # Are we returning an LLVM object? Wrap it in the appropriate class
             if (pointee.kind == "struct"
-                and is_llvm_type(pointee.cname)):
+                    and is_llvm_type(pointee.cname)):
 
                 return_type_name = remove_llvm_prefix(pointee.cname)
                 result += "        return {}({})".format(return_type_name,
@@ -286,15 +294,16 @@ def create_function(library, name, prototype,
     # Generate pythonic way to iterate over list of objects (e.g., functions in
     # a module)
     #
-    # We need: LLVMGetFirstSomething, with a single argument (self), returning a
-    # pointer to an LLVM object, that has a corresponding LLVMGetNextSomething
-    # which takes a Something object and returns a Something object
+    # We need: LLVMGetFirstSomething, with a single argument (self), returning
+    # a pointer to an LLVM object, that has a corresponding
+    # LLVMGetNextSomething which takes a Something object and returns a
+    # Something object
     if (is_class_method
         and name.startswith("LLVMGetFirst")
         and len(prototype.args) == 1
         and return_type.kind == "pointer"
         and return_type.item.kind == "struct"
-        and is_llvm_type(return_type.item.cname)):
+            and is_llvm_type(return_type.item.cname)):
 
         full_iterated_type_name = return_type.item.cname
         iterated_type_name = remove_llvm_prefix(full_iterated_type_name)
@@ -308,7 +317,7 @@ def create_function(library, name, prototype,
                 if (name == "LLVMGetNext" + iterated_name
                     and len(prototype.args) == 1
                     and prototype.args[0] == return_type
-                    and prototype.result == return_type):
+                        and prototype.result == return_type):
 
                     # OK, we can emit the generator functiono to iterate over
                     # Something
@@ -331,14 +340,18 @@ def create_function(library, name, prototype,
 
 env = os.environ.get
 
+
 def run_llvm_config(args):
     global llvm_config
-    return subprocess.check_output([llvm_config] + args).decode("utf-8").strip()
+    return subprocess.check_output(
+        [llvm_config] + args).decode("utf-8").strip()
 
 header_blacklist = ["llvm/Support/DataTypes.h",
                     "stddef.h",
                     "sys/types.h",
                     "stdbool.h"]
+
+
 def clean_include_file(in_path):
     """Clean the LLVM-C API headers files for parsing by CFFI: remove standard
     includes and static inline functions"""
@@ -369,6 +382,7 @@ def clean_include_file(in_path):
                 skip_block = False
     shutil.move(out_path, in_path)
 
+
 def parse_headers():
     """Parse the header files of the LLVM-C API and produce a list of libraries
     and the CFFI cached data"""
@@ -388,7 +402,11 @@ def parse_headers():
             sys.exit(-1)
 
     # Take the list of LLVM libraries
-    lib_files = glob(os.path.join(run_llvm_config(["--libdir"]), "libLLVM*.so"))
+    lib_files = glob(
+        os.path.join(
+            run_llvm_config(
+                ["--libdir"]),
+            "libLLVM*.so"))
 
     # Take the LLVM include path
     llvm_include_dir = run_llvm_config(["--includedir"]).strip()
@@ -456,6 +474,7 @@ def parse_headers():
 
     return list(libs), ffi_code
 
+
 def generate_wrapper():
     """Force the (re-)generation of the wrapper module for the current LLVM
     installation"""
@@ -467,8 +486,9 @@ def generate_wrapper():
     libs, ffi_code = parse_headers()
 
     if len(libs) == 0:
-        raise ValueError("No valid LLVM libraries found'
-            ', LLVM must be built with BUILD_SHARED_LIBS")
+        text = "No valid LLVM libraries found' \
+            ', LLVM must be built with BUILD_SHARED_LIBS"
+        raise ValueError(text)
 
     classes = defaultdict(list)
     global_functions = []
@@ -498,7 +518,7 @@ def generate_wrapper():
                 if len(args) > 0 and args[0].kind == "pointer":
                     arg0_type = args[0].item
                     if (arg0_type.kind == "struct"
-                        and is_llvm_type(arg0_type.cname)):
+                            and is_llvm_type(arg0_type.cname)):
 
                         if not [1 for x in classes[arg0_type.cname]
                                 if x[1] == name]:
@@ -534,9 +554,9 @@ class LLVMException(Exception):
             class_name = remove_llvm_prefix(key)
 
             # Each class is a wrapper for a pointer to a pointer to an LLVM
-            # object: when a pointer is passed to a function use `in_ptr` (which
-            # dereferences it), when you want to use it as an out argument using
-            # `out_ptr` instead (which returns a **)
+            # object: when a pointer is passed to a function use `in_ptr`
+            # (which dereferences it), when you want to use it as an out
+            # argument using `out_ptr` instead (which returns a **)
             write("""
 class {}(object):
     def __init__(self, value=None):
@@ -577,10 +597,9 @@ class {}(object):
                 docstring += setter_llvm
                 docstring += "\"\"\""
 
-                write("""    {} = property({}, {}, doc={})""".format(name,
-                                                                     getter,
-                                                                     setter,
-                                                                     docstring))
+                write(
+                    """    {} = property({}, {}, doc={})""".format(
+                        name, getter, setter, docstring))
 
         # Print global functions
         write("\nif True:")
@@ -593,7 +612,7 @@ class {}(object):
                 name = name[4:]
             write("{} = {}".format(name, str(value)))
 
-llvm_config = env("LLVM_CONFIG","llvm-config")
+llvm_config = env("LLVM_CONFIG", "llvm-config")
 
 cache_dir = env("XDG_CACHE_DIR", os.path.join(os.environ["HOME"], ".cache"))
 cache_dir = os.path.join(cache_dir, "llvmcpy")

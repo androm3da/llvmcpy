@@ -30,6 +30,7 @@ define i32 @main(i32, i8**) {
 }
 """
 
+
 def get_function_number(ir):
     context = llvm.get_global_context()
     buffer = llvm.create_memory_buffer_with_memory_range_copy(ir,
@@ -38,6 +39,8 @@ def get_function_number(ir):
     module = context.parse_ir(buffer)
     return len(list(module.iter_functions()))
 
+
 class TestSuite(unittest.TestCase):
+
     def function_count(self):
         self.assertEqual(get_function_number(module_source), 3)

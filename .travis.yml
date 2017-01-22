@@ -32,3 +32,4 @@ before_install:
 install: "pip install -e ."
 script:
     - python setup.py test
+    - pep8 --ignore=W503,E402 llvmcpy/
