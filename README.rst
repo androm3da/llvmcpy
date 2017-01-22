@@ -29,7 +29,7 @@ To try it out install LLVM and get `llvmcpy` using `pip`::
     sudo apt-get install llvm libllvm3.8
     pip install llvmcpy
 
-See `apt.llvm.org<http://apt.llvm.org/>`_ for more package sources
+See `apt.llvm.org <http://apt.llvm.org/>`_ for more package sources
 if yours don't include the version you're looking for.
 
 *****************************************
