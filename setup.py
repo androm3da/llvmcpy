@@ -27,5 +27,6 @@ setup(
     keywords='llvm',
     packages=['llvmcpy'],
     install_requires=['cffi>=1.0.0'],
+    tests_require=['pep8>=8.1.1'],
     test_suite="llvmcpy.test.TestSuite",
 )

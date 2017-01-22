@@ -190,8 +190,10 @@ def create_function(library, name, prototype,
     # array of LLVM objects.
     for out_arg in out_args:
         # If it's not the last argument and the next is an integer
-        eff_args_out = effective_arguments[out_arg + 1]
-        if ((len(effective_arguments) > out_arg + 1)
+        is_not_last = len(effective_arguments) > out_arg + 1
+        eff_args_out = effective_arguments[out_arg + 1] if is_not_last \
+            else None
+        if (is_not_last
             and (eff_args_out.kind == "primitive")
                 and (eff_args_out.cname == "unsigned int")):
 
