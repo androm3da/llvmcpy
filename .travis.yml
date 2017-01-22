@@ -30,6 +30,5 @@ before_install:
     - llvm-config --libdir
     - rm -rf ~/.cache/
 install: "pip install -e ."
-# command to run tests
 script:
-    - python -m unittest discover tests/
+    - python setup.py test
