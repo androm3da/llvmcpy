@@ -29,7 +29,6 @@ env:
     - LLVM_CONFIG=/usr/bin/llvm-config
 
 before_install:
-    - dpkg -L libllvm3.5
     - which llvm-config
     - llvm-config --libdir
     - rm -rf ~/.cache/
