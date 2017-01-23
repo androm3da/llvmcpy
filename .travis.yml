@@ -11,9 +11,6 @@ python:
   - "pypy"
 
 matrix:
-    python:
-      - "2.7"
-      - "3.5"
     addons:
       apt:
         packages:
@@ -31,10 +28,6 @@ matrix:
 env:
     - LLVM_CONFIG=/usr/bin/llvm-config
 
-before_install:
-    - which llvm-config
-    - llvm-config --libdir
-    - rm -rf ~/.cache/
 install: "pip install -e ."
 script:
     - python setup.py test
